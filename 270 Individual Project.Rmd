@@ -1,0 +1,92 @@
+---
+title: "270 Individual Project"
+author: "Jeff Joseph"
+date: "1/22/2021"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+We first load the necessary libraries
+
+```{r}
+# Load libraries
+library(ggplot2)
+library(tidyverse)
+library(stringr)
+library(zoo)
+library(lubridate)
+library(kableExtra)
+eval=FALSE
+```
+
+Load the data provided by the instructor
+
+```{r}
+#both data sets are needed at different stages of the project
+uscounties=read.csv("us-counties.csv")
+allofit=read_csv("all-states-history.csv")
+```
+
+Figure 1 is quite easily reproducible after a few steps of data manipulation
+
+```{r}
+# first figure
+new=uscounties%>%group_by(date)%>%summarise(total=sum(cases))
+new$new_cases=new$total-lag(new$total)
+new$avg7=rollmean(new$new_cases,k=7,fill=NA)
+plot(new$avg7, ylab = "Number of Cases", xlab = "Days Since Beginning of Pandemic")
+```
+
+We here generate the first table row by row
+
+```{r}
+#second figure/ first table
+#cases
+newanko=new%>%filter(date=="2021-01-17")
+totalcase_reported=sum(newanko$total,na.rm = TRUE)
+case_reported17=sum(newanko$new_cases,na.rm = TRUE)
+case_14daychange=(201117-195042)/201117
+
+#deaths
+newi=uscounties%>%group_by(date)%>%summarise(lanmo=sum(deaths,na.rm=T))
+totaldeath_reported=newi%>%filter(date=="2021-01-17")%>%select(lanmo)
+newi$new_deaths=newi$lanmo-lag(newi$lanmo)
+death_reported17=newi%>%filter(date=="2021-01-17")%>%select(new_deaths)
+newi$avg7=rollmean(newi$new_deaths,k=7,align="right",fill=NA)
+
+#hospitalization
+allofit1=allofit%>%select(date,state,hospitalized,hospitalizedCumulative,hospitalizedCurrently)
+hh=allofit1%>%group_by(date)%>%summarise(h=sum(hospitalizedCurrently,na.rm=T))
+hospitalization_reported17=hh%>%filter(date=="2021-01-17")%>%select(h)
+hh$avg7=rollmean(hh$h,k=7,align="right",fill=NA)
+
+```
+
+
+
+```{r}
+# fourth and last figure/last table
+#total cases
+#casestate=uscounties%>%group_by(state,date)
+upto_17data=uscounties%>%filter(date=="2021-01-17")
+oo=upto_17data%>%group_by(state)%>%summarise(tout=sum(cases))
+
+#avg cases in last 7 days
+neww=uscounties%>%group_by(state,date)%>%summarise(total=sum(cases))
+neww$new_cases=neww$total-lag(neww$total)
+neww$avg7=rollmean(neww$new_cases,k=7,align = "right",fill=NA)
+avg7_eachstate=neww%>%filter(date=="2021-01-17")
+
+```
+
+
+
+
+
+
+
+
+
+
